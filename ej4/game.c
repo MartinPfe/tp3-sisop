@@ -10,17 +10,17 @@
 #include <string.h>
 #include <ctype.h>
 
-#define WORDS 10
-#define WORDLEN 40
+#define PALABRAS 5
 #define INTENTOS 6
 
 bool srand_called = false;
 
 int i_rnd(int i) {
-    if (!srand_called) {
-        srand(time(NULL) << 10);
-        srand_called = true;
-    }
+    // if (!srand_called) {
+    //     srand(time(NULL) << 10);
+    //     srand_called = true;
+    // }
+	srand(time(NULL));
     return rand() % i;
 }
 
@@ -71,8 +71,31 @@ int main() {
 	printf("\n\t Example : a \n\n");
 	char *body = malloc(INTENTOS+1);
 
-	int id = i_rnd(WORDS);
-	char *word = "google";
+
+	//Vamos a buscar la palabra a adivinar desde el archivo
+	int indexPalabra = i_rnd(PALABRAS);
+
+	char * fileName = "palabras"; 
+    FILE* file = fopen(fileName, "r"); 
+    char line[256];
+
+	int lineas = 0;
+
+    while (fgets(line, sizeof(line), file) && indexPalabra != lineas) {
+		lineas ++;
+    }
+
+    fclose(file);
+ 	char* p;
+
+	if ((p = strchr(line, '\n')) != NULL){
+		printf("reemplace");
+		p--;
+		*p = '\0';
+	}
+	
+	//Inicializamos variables
+	char *word = line;
 	int len = strlen(word);
 	char *guessed = malloc(len);
 	char falseWord[INTENTOS];
@@ -86,6 +109,7 @@ int main() {
 	int errores = 0;
 	setvbuf(stdin, NULL, _IONBF, 0);
 
+	//Empieza el juego
 	do {
 
 		found = false;
@@ -104,6 +128,8 @@ int main() {
 		do {scanf("%c",&guess);} while ( getchar() != '\n' );
 
         guess = tolower(guess);
+
+
 		for (int i = 0; i < len; ++i)
 		{
 			if(word[i] == guess) {
