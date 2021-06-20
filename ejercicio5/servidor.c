@@ -70,8 +70,9 @@ void iniciar_juego(int connfd)
 	char *body = malloc(INTENTOS+1);
 
     //obtener palabra
-    // char palabra[256];
-    char *word = getWord();
+    char word[256];
+    char *pword = getWord();
+    strcpy(word, pword);
     printf("La palabra es: %s\n", word);
 
     // Variables del juego
