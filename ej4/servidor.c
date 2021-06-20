@@ -25,9 +25,32 @@ void escribirEnMemoriaCompartida(char * dir_M_SERVER);
 sem_t *semaforoServer;
 sem_t *semaforoCliente;
 char bufferSincro[1024]; //Buffer de escritura
+int senialFinRecibida = 0;
+
+void sigintHandler(int sig_num)
+{
+    /* Reset handler to catch SIGINT next time.
+       Refer http://en.cppreference.com/w/c/program/signal */
+    signal(SIGINT, sigintHandler);
+    printf("\n Cannot be terminated using Ctrl+C \n");
+    fflush(stdout);
+}
+
+void sigusr1Handler(int sig_num)
+{
+    /* Reset handler to catch SIGINT next time.
+       Refer http://en.cppreference.com/w/c/program/signal */
+    signal(SIGUSR1, sigusr1Handler);
+    printf("\n El servidor terminará su ejecución al terminar el juego actual.\n");
+    senialFinRecibida = 1;
+    fflush(stdout);
+}
 
 int main()
 {
+    signal(SIGINT, sigintHandler);
+    signal(SIGUSR1, sigusr1Handler);
+
     borrarSemaforo("server", semaforoServer);
     borrarSemaforo("cliente", semaforoCliente);
 
@@ -37,9 +60,10 @@ int main()
 	char *dir_M_SERVER = (char *)crearMemoriaCompartida("M_SERVER", sizeof(bufferSincro));
 
     char *respuesta = "";
+    int seguirJugando = 1;
 
     printf("Empezando a escuchar\n");
-    while (1)
+    while (seguirJugando)
     {
         
         printf("Esperando a que liberen\n");
@@ -59,8 +83,12 @@ int main()
         //escribirEnMemoriaCompartida(dir_M_SERVER);
 
         sem_post(semaforoServer);
+
+        if(senialFinRecibida == 1)
+        {
+            seguirJugando = 0;
+        }
     }
-    printf("exploto\n");
 
     borrarSemaforo("server", semaforoServer);
     borrarSemaforo("cliente", semaforoCliente);
