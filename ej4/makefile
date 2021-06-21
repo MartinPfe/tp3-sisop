@@ -1,7 +1,11 @@
 CC=gcc
 CFLAGS=-lpthread -lrt -pthread
-OBJSV = servidor.c 
+DEPS = game.h
+OBJSV = game.c servidor.c 
 OBJCLI = cliente.c
+
+%.o: %.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 all:cliente servidor
 	

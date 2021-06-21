@@ -18,47 +18,68 @@
 sem_t *obtenerSemaforo(const char *nombre);
 void borrarSemaforo(const char * nombre, sem_t *semaforo);
 
-void * crearMemoriaCompartida(const char *nombre, size_t size);
+void * abrirMemoriaCompartida(const char *nombre, size_t size);
 void borrarMemoriaCompartida(const char *nombre, size_t size, void *direccion);
 void escribirEnMemoriaCompartida(char * dir_M_SERVER);
 
 sem_t *semaforoServer;
 sem_t *semaforoCliente;
 char bufferSincro[1024]; //Buffer de escritura
+char *dir_M_SERVER;
+void sigintHandler(int sig_num)
+{
+    signal(SIGINT, sigintHandler);
+    strcpy(bufferSincro, "fin");
+    escribirEnMemoriaCompartida(dir_M_SERVER);
+    sem_post(semaforoCliente);
+    printf("Gracias por jugar!\n");
+    exit(0);
+}
 
 int main()
 {
+
+    signal(SIGINT, sigintHandler);
     semaforoServer = obtenerSemaforo("server");
     semaforoCliente = obtenerSemaforo("cliente");
 
-	char *dir_M_SERVER = (char *)crearMemoriaCompartida("M_SERVER", sizeof(bufferSincro));
+	dir_M_SERVER = (char *)abrirMemoriaCompartida("M_SERVER", sizeof(bufferSincro));
  	char* p;
+
+    printf("Bienvenido al Hangman. Comencemos!\n\n\n\n");
+   
+    sem_wait(semaforoServer);
+
+    // strcpy(bufferSincro, (char*)dir_M_SERVER);
+
+    // printf("%s \n", bufferSincro);
+    //fflush(stdin);
+
     while (1)
     {
-        printf("dale apreta\n");
-    
 		sem_wait(semaforoServer);
 
         strcpy(bufferSincro, (char*)dir_M_SERVER);
 
-		printf("el server dice: %s \n", bufferSincro);
+		printf("%s \n", bufferSincro);
 
-		printf("2\n");
         fflush(stdin);
-        printf("3\n");
 
-        fgets(bufferSincro, sizeof(bufferSincro), stdin);
-        printf("4\n");
+        do {
+            fgets(bufferSincro, sizeof(bufferSincro), stdin);
 
-        if ((p = strchr(bufferSincro, '\n')) != NULL)
-          *p = '\0';
-        printf("5\n");
+            if ((p = strchr(bufferSincro, '\n')) != NULL)
+            *p = '\0';
+
+            if(strlen(bufferSincro) > 1)
+            {
+                printf("Debe ingresar solo una letra.\n");
+            }
+        } while(strlen(bufferSincro) != 1);
 
         escribirEnMemoriaCompartida(dir_M_SERVER);
-        printf("6\n");
 
 		sem_post(semaforoCliente);
-        printf("7\n");
     }
 
     printf("done!\n");
@@ -69,15 +90,14 @@ sem_t * obtenerSemaforo(const char *nombre)
 	return sem_open(nombre, 0); // 0600
 }
 
-void * crearMemoriaCompartida(const char *nombre, size_t size)
+void * abrirMemoriaCompartida(const char *nombre, size_t size)
 {
-	int fd = shm_open(nombre, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR); // O_EXCL
-	ftruncate(fd, size); // Setea el tamaño de la memoria
+    int fd = shm_open(nombre, O_RDWR, 0);
+    ftruncate(fd, size); // Setea el tamaño de la memoria
 
-	void *dir = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-	return dir;
+    void *dir = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    return dir;
 }
-
 void borrarMemoriaCompartida(const char *nombre, size_t size, void *direccion)
 {
 	munmap(direccion, size);
@@ -92,7 +112,6 @@ void escribirEnMemoriaCompartida(char * dir_M_SERVER)
     	//printf("Envio -> %s\n", sendBuff);
     }
 }
-
 
 void borrarSemaforo(const char * nombre, sem_t *semaforo)
 {
