@@ -21,9 +21,10 @@ int i_rnd(int i) {
     return rand() % i;
 }
 
-void printBody(int errores, char* body)
+char* printBody(int errores, char* body)
 {
-	printf("\tErrores :%d\n", errores);
+	char bodyResult[900];
+
 	switch(errores) {
 
 		case 6: body[6] = '\\'; break;
@@ -36,24 +37,43 @@ void printBody(int errores, char* body)
 
 	}
 
-	printf("\t _________\n"
-	       "\t|         |\n"
+
+	snprintf(bodyResult, sizeof(bodyResult), "\tErrores :%d\n"
+		   "\t _________\n"
+	       "\t|         |\n" 
 	       "\t|        %c %c\n"
 	       "\t|        %c%c%c\n"
 	       "\t|        %c %c\n"
 	       "\t|             \n"
-	       "\t|             ", body[0], body[1], body[2],
-	       body[3], body[4], body[5], body[6]);
+	       "\t|             \n", errores,body[0], body[1], body[2], body[3],body[4],body[5],body[6]);
+
+
+	char* pBodyResult = bodyResult;
+	return pBodyResult;
 }
 
-void printWord(char* guess, int len) 
+char* printWord(char* guess, int len) 
 {
-	printf("\t");
+	char wordResult[len];
+	 strcpy(wordResult, "\0");
+	  char cToStr[2];
+	  cToStr[0] = ' ';  
+      cToStr[1] = '\0';    
+
+	// printf("\n%s\n", guess);
+	// printf("\n%s\n", wordResult);
+
+
 	for (int i = 0; i < len; ++i)
 	{
-		printf("%c ", guess[i]);
+            cToStr[0] = guess[i];    
+
+		strcat(wordResult, cToStr);
 	}
-	printf("\n\n");
+	strcat(wordResult,"\n\n");
+
+	char* pwordResult = wordResult;
+	return pwordResult;
 }
 
 char* getWord()

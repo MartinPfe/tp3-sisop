@@ -22,7 +22,7 @@ int main(){
     char *servidor = "localhost";
     int puerto_server = 8080;
     
-    printf("El server es: %d", (AF_INET));
+    // printf("El server es: %d", (AF_INET));
 
     memset(&serv_addr, '0', sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
@@ -50,12 +50,17 @@ int main(){
 
     printf("Conexion establecida\n");
 
+    read(se, bufferLectura, 1024);
+    printf("%s\n", bufferLectura);
+
     while(1)
     {
         // char* mensaje = "Hello world";
 
         char ingresado[1024];
         char* p;
+
+        strcpy(bufferLectura, "\0");
 
         fgets(ingresado, sizeof(ingresado), stdin);
 

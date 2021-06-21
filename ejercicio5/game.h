@@ -10,5 +10,5 @@
 
 char* getWord();
 void tryLetter(char* word, int len, char* guessed, char* falseWord, int* errores, char guess);
-void printWord(char* guess, int len);
-void printBody(int errores, char* body);
+char* printWord(char* guess, int len);
+char* printBody(int errores, char* body);

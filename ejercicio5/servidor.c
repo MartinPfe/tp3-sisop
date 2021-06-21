@@ -94,20 +94,36 @@ void iniciar_juego(int connfd)
     memset(buffLectura, '0', sizeof(buffLectura));
     int bytesRecibidos = 0;
 
-    // while(1)
-    // {
-    //     bytesRecibidos = read(connfd, buffLectura, sizeof(buffLectura)-1);
-    //     if(bytesRecibidos > 0)
-    //     {
-    //         buffLectura[bytesRecibidos] = 0;
-    //         printf("Mensaje recibido: %s\n", buffLectura);    
-            
-    //         send(connfd, "hello from server pa", strlen("hello from server pa"), 0);
-    //         printf("Hello message sent\n");
-    //     }
-    // }
+    char sendMessage[1024] = "";
+    char errorsMessage[10] = "";
+    char cToStr[2];
 
+
+    
     do{
+        if(errores == 0) 
+            strcpy(errorsMessage, "None\n");
+		for (int i = 0; i < errores; ++i)
+		{
+            if(i>0)
+                strcat(errorsMessage, "-");
+            else
+                strcpy(errorsMessage, "\n");
+
+            cToStr[0] = falseWord[i];    
+            cToStr[1] = '\0';    
+			strcat(errorsMessage, cToStr);
+		}
+        // sendMessage = "\n\n"+ printBody +"\n\n\tFalse Letters: " + errorsMessage + "\n\n " + printWord + " \tGive me a alphabet in lower case: "
+
+
+        // snprintf(sendMessage, sizeof(sendMessage),"\n\n%s\n\n\tFalse Letters: %s\n\n %s \tGive me a alphabet in lower case: \n",
+        //             printBody(errores, body),errorsMessage,printWord(guessed, len));
+
+         snprintf(sendMessage, sizeof(sendMessage),"%s\n\n\tFalse Letters: %s\n\n\t %s",printBody(errores, body),errorsMessage, printWord(guessed, len));            
+
+        send(connfd, sendMessage, strlen(sendMessage), 0);
+
         bytesRecibidos = read(connfd, buffLectura, sizeof(buffLectura)-1);
         if(bytesRecibidos > 0)
         {
@@ -116,21 +132,22 @@ void iniciar_juego(int connfd)
             
             tryLetter(word, len, guessed, falseWord, &errores, buffLectura[0]);
 
-            send(connfd, "hello from server pa", strlen("hello from server pa"), 0);
             // printf("Hello message sent\n");
         }
 		win = strchr(guessed, '_');
     }while(errores < INTENTOS && win != NULL);
 
+    strcpy(sendMessage, "\0");
+
     if(win == NULL) {
-		printf("\n");
-		printWord(guessed, len);
-		printf("\n\tCongrats! You have won : %s\n\n", word);
+        printf("palabra: %s\n", word);
+        snprintf(sendMessage, sizeof(sendMessage), "\n%s\n\tFelicitaciones! Has Ganado. La palabra era: %s\n\n", printWord(guessed, len), word);
 	} else {
-		printf("\n");
-		printBody(errores, body);
-		printf("\n\n\tBetter try next time. Word was %s\n\n", word);
+        printf("palabra: %s\n", word);
+        snprintf(sendMessage, sizeof(sendMessage), "\n%s\n\tHas Perdido!. La palabra era: %s\n\n", printBody(errores, body), word);
 	}
+
+    send(connfd, sendMessage, strlen(sendMessage), 0);
 
 	free(body);
 	free(guessed);
