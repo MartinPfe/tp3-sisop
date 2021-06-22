@@ -171,6 +171,7 @@ void iniciar_juego(char * dir_M_SERVER)
         {
             strcpy(bufferSincro, "Ingrese un caracter valido.");
             escribirEnMemoriaCompartida(dir_M_SERVER);
+            sem_post(semaforoServer);
             continue;
         }
     
@@ -198,20 +199,6 @@ void iniciar_juego(char * dir_M_SERVER)
 
         strcpy(bufferSincro, (char*)dir_M_SERVER);
 
-        if(errores == 0) 
-            strcpy(errorsMessage, "None\n");
-
-		for (int i = 0; i < errores; ++i)
-		{
-            if(i>0)
-                strcat(errorsMessage, "-");
-            else
-                strcpy(errorsMessage, "\n");
-
-            cToStr[0] = falseWord[i];    
-            cToStr[1] = '\0';    
-			strcat(errorsMessage, cToStr);
-		}
         letrasUsadas[intentos] = letra;
         intentos++;
 

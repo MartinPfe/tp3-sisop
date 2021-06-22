@@ -110,8 +110,8 @@ void tryLetter(char* word, int len, char* guessed, char* falseWord, int* errores
 {
 	bool found = false;
 
-	printf("word: %s - len: %d - guessed: %s - falseWord: %s - errores: %d - guess: %c\n", 
-			word, len, guessed, falseWord, *errores, guess);
+	// printf("word: %s - len: %d - guessed: %s - falseWord: %s - errores: %d - guess: %c\n", 
+	// 		word, len, guessed, falseWord, *errores, guess);
 
 	guess = tolower(guess);
 

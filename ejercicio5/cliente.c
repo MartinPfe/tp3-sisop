@@ -57,23 +57,27 @@ int main(){
     {
         // char* mensaje = "Hello world";
 
+        // read(se, bufferLectura, 1024);
+        // printf("%s\n", bufferLectura);
+
         char ingresado[1024];
         char* p;
 
-        strcpy(bufferLectura, "\0");
-
+        fflush(stdin);
         fgets(ingresado, sizeof(ingresado), stdin);
 
-        if((p = strchr(ingresado, '\n')) != NULL)
+        if ((p = strchr(ingresado, '\n')) != NULL)
             *p = '\0';
-        
+
         write(se, ingresado, strlen(ingresado));
 
+        
         read(se, bufferLectura, 1024);
         printf("%s\n", bufferLectura);
 
     }
 
+    printf("done!\n");
 
     return 0;
 }
