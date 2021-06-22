@@ -57,15 +57,14 @@ int main()
 
     while (1)
     {
+        printf("waiting");
 		sem_wait(semaforoServer);
-
+        printf("waking");
         strcpy(bufferSincro, (char*)dir_M_SERVER);
-
 		printf("%s \n", bufferSincro);
 
-        fflush(stdin);
-
         do {
+            fflush(stdin);
             fgets(bufferSincro, sizeof(bufferSincro), stdin);
 
             if ((p = strchr(bufferSincro, '\n')) != NULL)
@@ -75,7 +74,7 @@ int main()
             {
                 printf("Debe ingresar solo una letra.\n");
             }
-        } while(strlen(bufferSincro) != 1);
+        } while(strlen(bufferSincro) != 1 && strlen(bufferSincro) != 0);
 
         escribirEnMemoriaCompartida(dir_M_SERVER);
 

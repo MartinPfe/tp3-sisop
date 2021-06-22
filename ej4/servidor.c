@@ -25,17 +25,18 @@ void borrarMemoriaCompartida(const char *nombre, size_t size, void *direccion);
 void * abrirMemoriaCompartida(const char *nombre, size_t size);
 void escribirEnMemoriaCompartida(char * dir_M_SERVER);
 void iniciar_juego();
+void avisarClienteFin();
 
 sem_t *semaforoServer;
 sem_t *semaforoCliente;
 char bufferSincro[1024]; //Buffer de escritura
-char bufferSincro2[1024]; //Buffer de escritura
 int senialFinRecibida = 0;
+int isPlaying = 0;
+char *dir_M_SERVER;
 
 void sigintHandler(int sig_num)
 {
-    /* Reset handler to catch SIGINT next time.
-       Refer http://en.cppreference.com/w/c/program/signal */
+
     signal(SIGINT, sigintHandler);
     printf("\n Cannot be terminated using Ctrl+C \n");
     fflush(stdout);
@@ -43,18 +44,24 @@ void sigintHandler(int sig_num)
 
 void sigusr1Handler(int sig_num)
 {
-    /* Reset handler to catch SIGINT next time.
-       Refer http://en.cppreference.com/w/c/program/signal */
     signal(SIGUSR1, sigusr1Handler);
-    printf("\n El servidor terminará su ejecución al terminar el juego actual.\n");
-    senialFinRecibida = 1;
-    fflush(stdout);
+    if (isPlaying == 1){
+        printf("\n El servidor terminará su ejecución al terminar el juego actual.\n");
+        senialFinRecibida = 1;
+        fflush(stdout);
+    }
+    else{
+        printf("\n Gracias por jugar. \n");
+
+        fflush(stdout);
+        exit(0);
+    }
 }
 
 int main()
 {
-    //signal(SIGINT, sigintHandler);
-    //signal(SIGUSR1, sigusr1Handler);
+    signal(SIGINT, sigintHandler);
+    signal(SIGUSR1, sigusr1Handler);
 
     borrarSemaforo("server", semaforoServer);
     borrarSemaforo("cliente", semaforoCliente);
@@ -63,9 +70,8 @@ int main()
     semaforoCliente = crearSemaforo("cliente", 0);
 
     char *respuesta = "";
-    int seguirJugando = 1;
 
-    char *dir_M_SERVER = (char *)crearMemoriaCompartida("M_SERVER", sizeof(bufferSincro));
+    dir_M_SERVER = (char *)crearMemoriaCompartida("M_SERVER", sizeof(bufferSincro));
 
 	//Si habia algo lo borro
 	if(dir_M_SERVER)
@@ -75,39 +81,10 @@ int main()
 		dir_M_SERVER = (char *)crearMemoriaCompartida("M_SERVER", sizeof(bufferSincro));
 	}
 
-    // strcpy(bufferSincro,"VAMOS NIUELS");
-    // escribirEnMemoriaCompartida(dir_M_SERVER);
-    // sleep(30);
-
-
     printf("Empezando a escuchar\n");
-    while (seguirJugando)
+    while (senialFinRecibida == 0)
     {
-        
-        // printf("Esperando a que liberen\n");
-        // sem_wait(semaforoCliente);
-        // printf("ya liberaron\n");
-
-        // // if (strcmp(bufferSincro, (char *)dir_M_SERVER) == 0)
-        // //     continue;
-            
-        // strcpy(bufferSincro, (char*)dir_M_SERVER);
-
-        // printf("bufferSincro: %s \n", bufferSincro);
-
-        // respuesta = "Recibi lo que me dijiste. Mandame de nuevo";
-
-    	// strcpy(dir_M_SERVER, respuesta);    
-
-        //escribirEnMemoriaCompartida(dir_M_SERVER);
         iniciar_juego(dir_M_SERVER);
-
-        // sem_post(semaforoServer);
-
-        // if(senialFinRecibida == 1)
-        // {
-        //     seguirJugando = 0;
-        // }
     }
 
     borrarSemaforo("server", semaforoServer);
@@ -116,7 +93,13 @@ int main()
     printf("Fin del juego. Adios!!\n");
 }
 
-
+void avisarClienteFin()
+{
+    strcpy(bufferSincro, "STOP");
+    printf("Avisandole al otro gil");
+    escribirEnMemoriaCompartida(dir_M_SERVER);
+    sem_post(semaforoServer);
+}
 
 void iniciar_juego(char * dir_M_SERVER)
 {
@@ -164,9 +147,9 @@ void iniciar_juego(char * dir_M_SERVER)
     snprintf(bufferSincro, sizeof(bufferSincro),"%s\n\n\tLetras usadas: %s\n\n\t %s",printBody(errores, body),errorsMessage, printWord(guessed, len));            
     escribirEnMemoriaCompartida(dir_M_SERVER);
     sem_post(semaforoServer);
-
     do{
         sem_wait(semaforoCliente);
+        isPlaying = 1;
 
         strcpy(bufferSincro, (char*)dir_M_SERVER);
 
@@ -246,15 +229,12 @@ void iniciar_juego(char * dir_M_SERVER)
 
         if(seguirJugando)
         {
-            printf("SIGO JUGANDO. LIBERO SEMAFORO");
             sem_post(semaforoServer);
         }
-        else
-        {
-            printf("ME VOY. NO TENGO QUE TOCAR");
-        }
+       
     }
     while(seguirJugando);
+    isPlaying = 0;
 
     printf("YA ME FUI\n");
 
