@@ -55,23 +55,21 @@ int main(){
 
     while(1)
     {
-        // char* mensaje = "Hello world";
-
-        // read(se, bufferLectura, 1024);
-        // printf("%s\n", bufferLectura);
-
+     
         char ingresado[1024];
         char* p;
 
-        fflush(stdin);
-        fgets(ingresado, sizeof(ingresado), stdin);
+        do {
+            fflush(stdin);
+            fgets(ingresado, sizeof(ingresado), stdin);
 
-        if ((p = strchr(ingresado, '\n')) != NULL)
-            *p = '\0';
+            if ((p = strchr(ingresado, '\n')) != NULL)
+                *p = '\0';
+
+        } while(strlen(lecturaTeclado) == 0);
 
         write(se, ingresado, strlen(ingresado));
 
-        
         read(se, bufferLectura, 1024);
         printf("%s\n", bufferLectura);
 

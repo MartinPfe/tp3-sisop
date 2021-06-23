@@ -57,25 +57,18 @@ int main()
 
     while (1)
     {
-        printf("waiting\n");
 		sem_wait(semaforoServer);
-        printf("waking\n");
         strcpy(bufferSincro, (char*)dir_M_SERVER);
 		printf("%s \n", bufferSincro);
 
         do {
             fflush(stdin);
-            //printf("Ingrese la siguiente letra: \n");
             fgets(lecturaTeclado, sizeof(lecturaTeclado), stdin);
 
             if ((p = strchr(lecturaTeclado, '\n')) != NULL)
                 *p = '\0';
 
-            if(strlen(lecturaTeclado) > 1)
-            {
-                printf("Debe ingresar solo una letra.\n");
-            }
-
+          
         } while(strlen(lecturaTeclado) == 0);
 
         strcpy(bufferSincro, lecturaTeclado);
