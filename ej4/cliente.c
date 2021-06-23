@@ -25,10 +25,11 @@ void escribirEnMemoriaCompartida(char * dir_M_SERVER);
 sem_t *semaforoServer;
 sem_t *semaforoCliente;
 char bufferSincro[1024]; //Buffer de escritura
+char lecturaTeclado[1024]; //Buffer de escritura
 char *dir_M_SERVER;
 void sigintHandler(int sig_num)
 {
-    signal(SIGINT, sigintHandler);
+    printf("Le aviso al server y me voy\n");
     strcpy(bufferSincro, "fin");
     escribirEnMemoriaCompartida(dir_M_SERVER);
     sem_post(semaforoCliente);
@@ -38,7 +39,6 @@ void sigintHandler(int sig_num)
 
 int main()
 {
-
     signal(SIGINT, sigintHandler);
     semaforoServer = obtenerSemaforo("server");
     semaforoCliente = obtenerSemaforo("cliente");
@@ -57,25 +57,28 @@ int main()
 
     while (1)
     {
-        printf("waiting");
+        printf("waiting\n");
 		sem_wait(semaforoServer);
-        printf("waking");
+        printf("waking\n");
         strcpy(bufferSincro, (char*)dir_M_SERVER);
 		printf("%s \n", bufferSincro);
 
         do {
             fflush(stdin);
-            fgets(bufferSincro, sizeof(bufferSincro), stdin);
+            //printf("Ingrese la siguiente letra: \n");
+            fgets(lecturaTeclado, sizeof(lecturaTeclado), stdin);
 
-            if ((p = strchr(bufferSincro, '\n')) != NULL)
-            *p = '\0';
+            if ((p = strchr(lecturaTeclado, '\n')) != NULL)
+                *p = '\0';
 
-            if(strlen(bufferSincro) > 1)
+            if(strlen(lecturaTeclado) > 1)
             {
                 printf("Debe ingresar solo una letra.\n");
             }
-        } while(strlen(bufferSincro) != 1 && strlen(bufferSincro) != 0);
 
+        } while(strlen(lecturaTeclado) == 0);
+
+        strcpy(bufferSincro, lecturaTeclado);
         escribirEnMemoriaCompartida(dir_M_SERVER);
 
 		sem_post(semaforoCliente);
