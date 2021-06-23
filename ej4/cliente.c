@@ -37,8 +37,18 @@ void sigintHandler(int sig_num)
     exit(0);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+
+    if(argc != 2 || strcmp(argv[1], "h") == 0 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "-h") == 0
+        || strcmp(argv[1], "--h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
+    {
+        printf("Esta es el Cliente para el juego HangMan.\n\nObjetivo: es la UI del usuario para acceder y jugar al juego Hangman, cuenta con 6 Intentos para descubrir la palabra contabilizando diferentes letras ingresadas por el usuario."
+                        "\n\nLa sintaxis para la ejecucion es:\t./cliente\n");
+
+        exit(1);
+    }
+
     signal(SIGINT, sigintHandler);
     semaforoServer = obtenerSemaforo("server");
     semaforoCliente = obtenerSemaforo("cliente");
