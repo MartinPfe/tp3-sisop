@@ -29,7 +29,7 @@ char lecturaTeclado[1024]; //Buffer de escritura
 char *dir_M_SERVER;
 void sigintHandler(int sig_num)
 {
-    printf("Le aviso al server y me voy\n");
+    // printf("Le aviso al server y me voy\n");
     strcpy(bufferSincro, "fin");
     escribirEnMemoriaCompartida(dir_M_SERVER);
     sem_post(semaforoCliente);
@@ -37,8 +37,23 @@ void sigintHandler(int sig_num)
     exit(0);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+    if(argc > 1){
+        if(strcmp(argv[1], "h") == 0 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-?") == 0
+            || strcmp(argv[1], "--h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
+        {
+                    printf("Esta es el Cliente para el juego HangMan.\n\nObjetivo: Es la UI de acceso al juego, el usuario debe descubrir la palabra y solo puede cometer 6 errores."
+                            "\n\nLa sintaxis para la ejecucion es:\t./cliente\n");
+            exit(1);
+        }
+        else
+        {
+            printf("El parametro utilizado no es correcto.\nEjecute el siguiente comando para mas informacion: ./cliente -help\n");
+            exit(1);
+        }
+    }
+
     signal(SIGINT, sigintHandler);
     semaforoServer = obtenerSemaforo("server");
     semaforoCliente = obtenerSemaforo("cliente");
@@ -46,8 +61,8 @@ int main()
 	dir_M_SERVER = (char *)abrirMemoriaCompartida("M_SERVER", sizeof(bufferSincro));
  	char* p;
 
-    printf("Bienvenido al Hangman. Comencemos!\n\n\n\n");
    
+    printf("Bienvenido al Hangman!\nSolo puedes cometer 6(seis) errores.\n\nComencemos!\n\n\n\n");
     sem_wait(semaforoServer);
 
     // strcpy(bufferSincro, (char*)dir_M_SERVER);
