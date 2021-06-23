@@ -29,7 +29,7 @@ char lecturaTeclado[1024]; //Buffer de escritura
 char *dir_M_SERVER;
 void sigintHandler(int sig_num)
 {
-    printf("Le aviso al server y me voy\n");
+    // printf("Le aviso al server y me voy\n");
     strcpy(bufferSincro, "fin");
     escribirEnMemoriaCompartida(dir_M_SERVER);
     sem_post(semaforoCliente);
@@ -39,14 +39,19 @@ void sigintHandler(int sig_num)
 
 int main(int argc, char *argv[])
 {
-
-    if(argc != 2 || strcmp(argv[1], "h") == 0 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "-h") == 0
-        || strcmp(argv[1], "--h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
-    {
-        printf("Esta es el Cliente para el juego HangMan.\n\nObjetivo: es la UI del usuario para acceder y jugar al juego Hangman, cuenta con 6 Intentos para descubrir la palabra contabilizando diferentes letras ingresadas por el usuario."
-                        "\n\nLa sintaxis para la ejecucion es:\t./cliente\n");
-
-        exit(1);
+    if(argc > 1){
+        if(strcmp(argv[1], "h") == 0 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-?") == 0
+            || strcmp(argv[1], "--h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
+        {
+                    printf("Esta es el Cliente para el juego HangMan.\n\nObjetivo: Es la UI de acceso al juego, el usuario debe descubrir la palabra y solo puede cometer 6 errores."
+                            "\n\nLa sintaxis para la ejecucion es:\t./cliente\n");
+            exit(1);
+        }
+        else
+        {
+            printf("El parametro utilizado no es correcto.\nEjecute el siguiente comando para mas informacion: ./cliente -help\n");
+            exit(1);
+        }
     }
 
     signal(SIGINT, sigintHandler);
@@ -56,8 +61,8 @@ int main(int argc, char *argv[])
 	dir_M_SERVER = (char *)abrirMemoriaCompartida("M_SERVER", sizeof(bufferSincro));
  	char* p;
 
-    printf("Bienvenido al Hangman. Comencemos!\n\n\n\n");
    
+    printf("Bienvenido al Hangman!\nSolo puedes cometer 6(seis) errores.\n\nComencemos!\n\n\n\n");
     sem_wait(semaforoServer);
 
     // strcpy(bufferSincro, (char*)dir_M_SERVER);
@@ -67,9 +72,9 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        printf("waiting\n");
+        // printf("waiting\n");
 		sem_wait(semaforoServer);
-        printf("waking\n");
+        // printf("waking\n");
         strcpy(bufferSincro, (char*)dir_M_SERVER);
 		printf("%s \n", bufferSincro);
 

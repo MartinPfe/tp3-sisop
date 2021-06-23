@@ -60,15 +60,21 @@ void sigusr1Handler(int sig_num)
 
 int main(int argc, char *argv[])
 {
-
-    if(argc != 2 || strcmp(argv[1], "h") == 0 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "-h") == 0
-        || strcmp(argv[1], "--h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
-    {
-                printf("Esta es el Servidor para el juego HangMan.\n\nObjetivo: se encarga de manejar toda la logica del juego mediante el mecanismo de IPC: Memoria Compartida"
-                        "\n\nLa sintaxis para la ejecucion es:\t./servidor\n");
-
-        exit(1);
+    if(argc > 1){
+        if(strcmp(argv[1], "h") == 0 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-?") == 0
+            || strcmp(argv[1], "--h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
+        {
+                    printf("Esta es el Servidor para el juego HangMan.\n\nObjetivo: se encarga de manejar toda la logica del juego mediante el mecanismo de IPC: Memoria Compartida"
+                            "\n\nLa sintaxis para la ejecucion es:\t./servidor\n");
+            exit(1);
+        }
+        else
+        {
+            printf("El parametro utilizado no es correcto.\nEjecute el siguiente comando para mas informacion: ./servidor -help\n");
+            exit(1);
+        }
     }
+
 
     //signal(SIGINT, sigintHandler);
     signal(SIGUSR1, sigusr1Handler);

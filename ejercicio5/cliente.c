@@ -16,15 +16,22 @@ struct sockaddr_in serv_addr;
 char bufferEscritura[1024];
 char bufferLectura[1024];
 
-int main(int argc, char *argv[]){
-    if(argc != 2 || strcmp(argv[1], "h") == 0 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "-h") == 0
-        || strcmp(argv[1], "--h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
-    {
-         printf("Esta es el Cliente para el juego HangMan.\n\nObjetivo: es la UI del usuario para acceder y jugar al juego Hangman, cuenta con 6 Intentos para descubrir la palabra contabilizando diferentes letras ingresadas por el usuario."
-                "\n\nLa sintaxis para la ejecucion es:\t./cliente\n");
-        exit(1);
+int main(int argc, char *argv[])
+{
+   if(argc > 1){
+        if(strcmp(argv[1], "h") == 0 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-?") == 0
+            || strcmp(argv[1], "--h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
+        {
+                    printf("Esta es el Cliente para el juego HangMan.\n\nObjetivo: Es la UI de acceso al juego, el usuario debe descubrir la palabra y solo puede cometer 6 errores."
+                            "\n\nLa sintaxis para la ejecucion es:\t./cliente\n");
+            exit(1);
+        }
+        else
+        {
+            printf("El parametro utilizado no es correcto.\nEjecute el siguiente comando para mas informacion: ./cliente -help\n");
+            exit(1);
+        }
     }
-
     int se;
 
     char *servidor = "localhost";
