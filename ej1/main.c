@@ -1,3 +1,21 @@
+//***********************
+// Nombre del Script:            ./main
+// Trabajo Practico Nro:         3
+// Ejercicio Nro:                1
+// Entrega Nro:                  1
+// Integrantes
+//
+//       Apellidos               Nombre                  Dni
+//-------------------------------------------------------------------
+//
+//       Della Maddalena         Tomas                   39322141
+//       Hidalgo                 Nahuel Christian        41427455
+//       Feito                   Gustavo                 27027190
+//       Pfeiffer                Martin                  39166668
+//       Zarzycki                Hernan Alejandro        39244031
+//
+//******************
+
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
