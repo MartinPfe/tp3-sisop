@@ -28,19 +28,25 @@ void sigintHandler(int sig_num)
 
 int main(int argc, char *argv[])
 {
-   if(argc != 2){
+    if(argc == 2)
+    {
         if(strcmp(argv[1], "h") == 0 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-?") == 0
             || strcmp(argv[1], "--h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
         {
-                    printf("Esta es el Cliente para el juego HangMan.\n\nObjetivo: Es la UI de acceso al juego, el usuario debe descubrir la palabra y solo puede cometer 6 errores."
+            printf("Esta es el Cliente para el juego HangMan.\n\nObjetivo: Es la UI de acceso al juego, el usuario debe descubrir la palabra y solo puede cometer 6 errores."
                             "\n\nLa sintaxis para la ejecucion es: ./cliente [servidor string] [puerto int]\n\nEjemplo: ./cliente 127.0.0.1 8080\n\n");
             exit(1);
         }
-        // else
-        // {
-        //     printf("El parametro utilizado no es correcto.\nEjecute el siguiente comando para mas informacion: ./cliente -help\n");
-        //     exit(1);
-        // }
+        else
+        {
+            printf("El parametro utilizado no es correcto.\nEjecute el siguiente comando para mas informacion: ./cliente -help\n");
+            exit(1);
+        }
+    }
+    
+    if(argc != 3){
+        printf("El parametro utilizado no es correcto.\nEjecute el siguiente comando para mas informacion: ./cliente -help\n");
+        exit(1);
     }
 
     signal(SIGINT, sigintHandler);
@@ -103,10 +109,7 @@ int main(int argc, char *argv[])
             exit(0);
         }
 
-        printf("**********Recibido************\n");
         printf("%s\n", bufferLectura);
-        printf("**********FIN Recibido************\n");
-
 
     }
 

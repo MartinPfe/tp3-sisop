@@ -53,31 +53,28 @@ void sigusr1Handler(int sig_num)
 
 int main(int argc, char *argv[])
 {
-    if(argc > 1){
-        if(strcmp(argv[1], "h") == 0 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-?") == 0
-            || strcmp(argv[1], "--h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
-        {
-                    printf("Esta es el Servidor para el juego HangMan.\n\nObjetivo: se encarga de manejar toda la logica del juego mediante el mecanismo de IPC: Sockets"
-                            "\n\nLa sintaxis para la ejecucion es:\t./servidor\n");
-            exit(1);
-        }
-        else
-        {
-            printf("El parametro utilizado no es correcto.\nEjecute el siguiente comando para mas informacion: ./servidor -help\n");
-            exit(1);
-        }
+    if(argc != 2){
+        printf("El parametro utilizado no es correcto.\nEjecute el siguiente comando para mas informacion: ./servidor -help\n");
+        exit(1);
     }
 
+    if(strcmp(argv[1], "h") == 0 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-?") == 0
+        || strcmp(argv[1], "--h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
+    {
+                printf("Esta es el Servidor para el juego HangMan.\n\nObjetivo: se encarga de manejar toda la logica del juego mediante el mecanismo de IPC: Sockets"
+                        "\n\nLa sintaxis para la ejecucion es: ./servidor [puerto int]\n\nEjemplo: ./servidor 8080\n\n");
+        exit(1);
+    }
     signal(SIGINT, sigintHandler);
     signal(SIGUSR1, sigusr1Handler);
 
-    int PORT = 8080;
+    int puerto_server = strtol(argv[1],NULL,10);;
     int se;
 
     memset(&serv_addr, '0', sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_port = htons(puerto_server);
     
     // SOCKET DE ESCUCHA
     //socket(DOMINIO, TIPO, PROTOCOLO);
@@ -163,23 +160,15 @@ void iniciar_juego(int connfd)
     int terminarPartida = 0;
 
     snprintf(sendMessage, sizeof(sendMessage),"%s\n\n\tLetras usadas: %s\n\n\t %s",printBody(errores, body),letrasUsadas, printWord(guessed, len));            
-    printf("******************1*******************\n");
-    printf("*************************************\n");
-    printf("%s", sendMessage);
-    printf("*************************************\n");
-    printf("*************************************\n");
 
     send(connfd, sendMessage, strlen(sendMessage), 0);
     isPlaying = 1;
     do{
         bytesRecibidos = read(connfd, buffLectura, sizeof(buffLectura)-1);
 
-        printf("ejecutando\n");
-
         if(bytesRecibidos > 0)
         {
             buffLectura[bytesRecibidos] = 0;
-            printf("Mensaje recibido: %s\n", buffLectura);    
         }
 
         if (strstr(buffLectura, "/fin") > 0)
@@ -219,12 +208,6 @@ void iniciar_juego(int connfd)
                 {
                     printf("El cliente ingresó una letra repetida\n");
                     strcpy(sendMessage, "La letra que ingresaste esta repetida.\n");
-                    printf("******************3*******************\n");
-                    printf("*************************************\n");
-                    printf("%s", sendMessage);
-                    printf("*************************************\n");
-                    printf("*************************************\n");
-
                     send(connfd, sendMessage, strlen(sendMessage), 0);
                     continue;
                 }
@@ -235,21 +218,13 @@ void iniciar_juego(int connfd)
             letrasUsadas[intentos] = letra;
             intentos++;
 
-
             printf("Letras usadas: %s\n", letrasUsadas);
 
             snprintf(sendMessage, sizeof(sendMessage),"%s\n\n\tLetras usadas: %s\n\n\t %s",printBody(errores, body),letrasUsadas, printWord(guessed, len));            
 
-
             win = strchr(guessed, '_');
 
             seguirJugando = (errores < INTENTOS && win != NULL && terminarPartida == 0);
-
-            printf("*****************2********************\n");
-            printf("*************************************\n");
-            printf("%s", sendMessage);
-            printf("*************************************\n");
-            printf("*************************************\n");
 
             if (seguirJugando)
             {
@@ -267,14 +242,6 @@ void iniciar_juego(int connfd)
 	} else {
         snprintf(sendMessage, sizeof(sendMessage), "\n%s\nHas Perdido!. La palabra era: %s\n\nIngresa alguna letra para jugar de nuevo o Ctrl + C para finalizar.\n", printBody(errores, body), word);
 	}
-
-    printf("******************3*******************\n");
-    printf("*************************************\n");
-    printf("%s", sendMessage);
-    printf("*************************************\n");
-    printf("*************************************\n");
-
-
     send(connfd, sendMessage, strlen(sendMessage), 0);
 
 	free(body);
@@ -282,16 +249,14 @@ void iniciar_juego(int connfd)
     free(letrasUsadas);
 
 
-    printf("Esperamos\n");
-
     if (senialFinRecibida==0)
     {
+        printf("Esperando a que el cliente presione una tecla\n");    
         bytesRecibidos = read(connfd, buffLectura, sizeof(buffLectura)-1);
 
         if(bytesRecibidos > 0)
         {
             buffLectura[bytesRecibidos] = 0;
-            printf("Mensaje recibido: %s\n", buffLectura);    
         }
 
         if (strstr(buffLectura, "/fin") > 0)
@@ -301,14 +266,11 @@ void iniciar_juego(int connfd)
         }
     }
     else {
+        printf("Nos mandaron a cerrarnos. Nos vamos\n");    
         sleep(1);
         strcpy(sendMessage, "/fin");
         send(connfd, sendMessage, strlen(sendMessage), 0);
     }
 
-    printf("Sigue\n");
-
-	// return EXIT_SUCCESS;
     return;
-
 }
