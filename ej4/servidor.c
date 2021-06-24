@@ -36,9 +36,8 @@ char *dir_M_SERVER;
 
 void sigintHandler(int sig_num)
 {
-
     signal(SIGINT, sigintHandler);
-    printf("\n Cannot be terminated using Ctrl+C \n");
+    printf("\n No se puede terminar el servidor Ctrl + C. Use SIGUSR1 (-10).\n");
     fflush(stdout);
 }
 
@@ -52,7 +51,6 @@ void sigusr1Handler(int sig_num)
     }
     else{
         printf("\n Gracias por jugar. \n");
-
         fflush(stdout);
         exit(0);
     }
@@ -171,9 +169,9 @@ void iniciar_juego(char * dir_M_SERVER)
 
         printf("Mensaje recibido: %s\n", bufferSincro);    
             
-        bufferSincro[3] = '\0';
+        //bufferSincro[3] = '\0';
             
-        if (strcmp(bufferSincro, "fin") == 0)
+        if (strstr(bufferSincro, "/fin") > 0)
         {
             printf("ingresado FINNN");
             terminarPartida = 1;
@@ -251,9 +249,9 @@ void iniciar_juego(char * dir_M_SERVER)
     else
     {
         if(win == NULL) {
-            snprintf(bufferSincro, sizeof(bufferSincro), "\n%s\nFelicitaciones! Has Ganado. La palabra era: %s\n\nIngresa alguna letra para jugar de nuevo o Ctrl + C para finalizar.", printWord(guessed, len), word);
+            snprintf(bufferSincro, sizeof(bufferSincro), "\n%s\nFelicitaciones! Has Ganado. La palabra era: %s\n\nIngresa alguna letra para jugar de nuevo o Ctrl + C para finalizar.\n", printWord(guessed, len), word);
         } else {
-            snprintf(bufferSincro, sizeof(bufferSincro), "\n%s\nHas Perdido!. La palabra era: %s\n\nIngresa alguna letra para jugar de nuevo o Ctrl + C para finalizar.", printBody(errores, body), word);
+            snprintf(bufferSincro, sizeof(bufferSincro), "\n%s\nHas Perdido!. La palabra era: %s\n\nIngresa alguna letra para jugar de nuevo o Ctrl + C para finalizar.\n", printBody(errores, body), word);
         }
         escribirEnMemoriaCompartida(dir_M_SERVER);
     }
@@ -268,11 +266,7 @@ void iniciar_juego(char * dir_M_SERVER)
     {
         strcpy(bufferSincro, (char*)dir_M_SERVER);
 
-        printf("Mensaje recibido: %s\n", bufferSincro);    
-            
-        bufferSincro[3] = '\0';
-            
-        if (strcmp(bufferSincro, "fin") == 0)
+        if (strstr(bufferSincro, "/fin") > 0)
         {
             sem_post(semaforoServer);
         }

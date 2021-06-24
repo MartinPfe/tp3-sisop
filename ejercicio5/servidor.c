@@ -25,6 +25,31 @@ void iniciar_juego(int connfd);
 struct sockaddr_in serv_addr;
 
 int senialFinRecibida = 0;
+int hayCliente = 0;
+int isPlaying = 0;
+
+void sigintHandler(int sig_num)
+{
+    signal(SIGINT, sigintHandler);
+    printf("\n No se puede terminar el servidor Ctrl + C. Use SIGUSR1 (-10).\n");
+    fflush(stdout);
+}
+
+void sigusr1Handler(int sig_num)
+{
+    signal(SIGUSR1, sigusr1Handler);
+    if (isPlaying == 1){
+        printf("\n El servidor terminará su ejecución al terminar el juego actual.\n");
+        senialFinRecibida = 1;
+        fflush(stdout);
+    }
+    else{
+        printf("\n Gracias por jugar. \n");
+
+        fflush(stdout);
+        exit(0);
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -42,6 +67,9 @@ int main(int argc, char *argv[])
             exit(1);
         }
     }
+
+    signal(SIGINT, sigintHandler);
+    signal(SIGUSR1, sigusr1Handler);
 
     int PORT = 8080;
     int se;
@@ -69,14 +97,24 @@ int main(int argc, char *argv[])
 
     printf("Esperando conexiones...\n");
 
-    int connfd = accept(se, (struct sockaddr*)NULL, NULL);
+    int connfd = 0;
 
     while(senialFinRecibida == 0)
     {
-        printf("Conexion del cliente aceptada\n");
+        if (hayCliente == 1)
+        {
+            printf("Conexion del cliente aceptada\n");
 
-        iniciar_juego(connfd);
+            iniciar_juego(connfd);
+        }
+        else {
+            printf("Esperando nueva conexion\n");
+
+            connfd = accept(se, (struct sockaddr*)NULL, NULL);
+            hayCliente = 1;
+        }
     }
+
 
     return 0;
 }
@@ -125,9 +163,14 @@ void iniciar_juego(int connfd)
     int terminarPartida = 0;
 
     snprintf(sendMessage, sizeof(sendMessage),"%s\n\n\tLetras usadas: %s\n\n\t %s",printBody(errores, body),letrasUsadas, printWord(guessed, len));            
+    printf("******************1*******************\n");
+    printf("*************************************\n");
+    printf("%s", sendMessage);
+    printf("*************************************\n");
+    printf("*************************************\n");
 
     send(connfd, sendMessage, strlen(sendMessage), 0);
-
+    isPlaying = 1;
     do{
         bytesRecibidos = read(connfd, buffLectura, sizeof(buffLectura)-1);
 
@@ -139,61 +182,98 @@ void iniciar_juego(int connfd)
             printf("Mensaje recibido: %s\n", buffLectura);    
         }
 
-        letra = buffLectura[0];
-        found = 0;
-
-        if (strcmp(&letra, "\n") == 0)
+        if (strstr(buffLectura, "/fin") > 0)
         {
-            strcpy(sendMessage, "Ingrese un caracter valido.\n");
-            send(connfd, sendMessage, strlen(sendMessage), 0);
-
-            continue;
+            printf("El cliente termino la partida \n");
+            terminarPartida = 1;
+            seguirJugando = 0;
+            hayCliente = 0;
+            break;
         }
-    
-        if(!isalpha(letra))
+
+        if (terminarPartida == 0)
         {
-            strcpy(sendMessage, "Ingrese un caracter valido.\n");
-            send(connfd, sendMessage, strlen(sendMessage), 0);
+            letra = buffLectura[0];
+            found = 0;
 
-            continue;
-        }
-        else {
-            letra = tolower(letra);
-            if(strchr(letrasUsadas, letra) != NULL)
+            if (strcmp(&letra, "") == 0)
             {
-                strcpy(sendMessage, "La letra que ingresaste esta repetida.\n");
+                printf("El cliente ingresó un vacio\n");
+                strcpy(sendMessage, "Ingrese un caracter valido.\n");
                 send(connfd, sendMessage, strlen(sendMessage), 0);
-          
+
                 continue;
+            }
+        
+            if(!isalpha(letra))
+            {
+                printf("El cliente ingresó algo que no era caracter\n");
+                strcpy(sendMessage, "Ingrese un caracter valido.\n");
+                send(connfd, sendMessage, strlen(sendMessage), 0);
+
+                continue;
+            }
+            else {
+                letra = tolower(letra);
+                if(strchr(letrasUsadas, letra) != NULL)
+                {
+                    printf("El cliente ingresó una letra repetida\n");
+                    strcpy(sendMessage, "La letra que ingresaste esta repetida.\n");
+                    printf("******************3*******************\n");
+                    printf("*************************************\n");
+                    printf("%s", sendMessage);
+                    printf("*************************************\n");
+                    printf("*************************************\n");
+
+                    send(connfd, sendMessage, strlen(sendMessage), 0);
+                    continue;
+                }
+            }
+
+            tryLetter(word, len, guessed, falseWord, &errores, buffLectura[0]);
+
+            letrasUsadas[intentos] = letra;
+            intentos++;
+
+
+            printf("Letras usadas: %s\n", letrasUsadas);
+
+            snprintf(sendMessage, sizeof(sendMessage),"%s\n\n\tLetras usadas: %s\n\n\t %s",printBody(errores, body),letrasUsadas, printWord(guessed, len));            
+
+
+            win = strchr(guessed, '_');
+
+            seguirJugando = (errores < INTENTOS && win != NULL && terminarPartida == 0);
+
+            printf("*****************2********************\n");
+            printf("*************************************\n");
+            printf("%s", sendMessage);
+            printf("*************************************\n");
+            printf("*************************************\n");
+
+            if (seguirJugando)
+            {
+                send(connfd, sendMessage, strlen(sendMessage), 0);
             }
         }
 
-        tryLetter(word, len, guessed, falseWord, &errores, buffLectura[0]);
-
-        letrasUsadas[intentos] = letra;
-        intentos++;
-
-
-        printf("Letras usadas: %s\n", letrasUsadas);
-
-        snprintf(sendMessage, sizeof(sendMessage),"%s\n\n\tLetras usadas: %s\n\n\t %s",printBody(errores, body),letrasUsadas, printWord(guessed, len));            
-
-        send(connfd, sendMessage, strlen(sendMessage), 0);
-
-		win = strchr(guessed, '_');
-
-        seguirJugando = (errores < INTENTOS && win != NULL && terminarPartida == 0);
-
-
     }while(seguirJugando);
+    isPlaying = 0;
 
     strcpy(sendMessage, "\0");
 
     if(win == NULL) {
-        snprintf(sendMessage, sizeof(sendMessage), "\n%s\n\tFelicitaciones! Has Ganado. La palabra era: %s\n\nPresiona ENTER para jugar de nuevo o Ctrl + C para finalizar.", printWord(guessed, len), word);
+        snprintf(sendMessage, sizeof(sendMessage), "\n%s\nFelicitaciones! Has Ganado. La palabra era: %s\n\nIngresa alguna letra para jugar de nuevo o Ctrl + C para finalizar.\n", printBody(errores, body), word);
 	} else {
-        snprintf(sendMessage, sizeof(sendMessage), "\n%s\n\tHas Perdido!. La palabra era: %s\n\nPresiona ENTER para jugar de nuevo o Ctrl + C para finalizar.", printBody(errores, body), word);
+        snprintf(sendMessage, sizeof(sendMessage), "\n%s\nHas Perdido!. La palabra era: %s\n\nIngresa alguna letra para jugar de nuevo o Ctrl + C para finalizar.\n", printBody(errores, body), word);
 	}
+
+    printf("******************3*******************\n");
+    printf("*************************************\n");
+    printf("%s", sendMessage);
+    printf("*************************************\n");
+    printf("*************************************\n");
+
 
     send(connfd, sendMessage, strlen(sendMessage), 0);
 
@@ -201,7 +281,32 @@ void iniciar_juego(int connfd)
 	free(guessed);
     free(letrasUsadas);
 
-    read(connfd, NULL, 0);
+
+    printf("Esperamos\n");
+
+    if (senialFinRecibida==0)
+    {
+        bytesRecibidos = read(connfd, buffLectura, sizeof(buffLectura)-1);
+
+        if(bytesRecibidos > 0)
+        {
+            buffLectura[bytesRecibidos] = 0;
+            printf("Mensaje recibido: %s\n", buffLectura);    
+        }
+
+        if (strstr(buffLectura, "/fin") > 0)
+        {
+            printf("El cliente termino la partida \n");
+            hayCliente = 0;
+        }
+    }
+    else {
+        sleep(1);
+        strcpy(sendMessage, "/fin");
+        send(connfd, sendMessage, strlen(sendMessage), 0);
+    }
+
+    printf("Sigue\n");
 
 	// return EXIT_SUCCESS;
     return;

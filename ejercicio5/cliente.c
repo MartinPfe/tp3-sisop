@@ -15,29 +15,38 @@ struct sockaddr_in serv_addr;
 
 char bufferEscritura[1024];
 char bufferLectura[1024];
+int se;
+
+void sigintHandler(int sig_num)
+{
+    // printf("Le aviso al server y me voy\n");
+    strcpy(bufferEscritura, "/fin");
+    write(se, bufferEscritura, strlen(bufferEscritura));
+    printf("Gracias por jugar!\n");
+    exit(0);
+}
 
 int main(int argc, char *argv[])
 {
-   if(argc > 1){
+   if(argc != 2){
         if(strcmp(argv[1], "h") == 0 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-?") == 0
             || strcmp(argv[1], "--h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
         {
                     printf("Esta es el Cliente para el juego HangMan.\n\nObjetivo: Es la UI de acceso al juego, el usuario debe descubrir la palabra y solo puede cometer 6 errores."
-                            "\n\nLa sintaxis para la ejecucion es:\t./cliente\n");
+                            "\n\nLa sintaxis para la ejecucion es: ./cliente [servidor string] [puerto int]\n\nEjemplo: ./cliente 127.0.0.1 8080\n\n");
             exit(1);
         }
-        else
-        {
-            printf("El parametro utilizado no es correcto.\nEjecute el siguiente comando para mas informacion: ./cliente -help\n");
-            exit(1);
-        }
+        // else
+        // {
+        //     printf("El parametro utilizado no es correcto.\nEjecute el siguiente comando para mas informacion: ./cliente -help\n");
+        //     exit(1);
+        // }
     }
-    int se;
 
-    char *servidor = "localhost";
-    int puerto_server = 8080;
-    
-    // printf("El server es: %d", (AF_INET));
+    signal(SIGINT, sigintHandler);
+
+    char *servidor = argv[1];
+    int puerto_server = strtol(argv[2],NULL,10);;
 
     memset(&serv_addr, '0', sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
@@ -51,7 +60,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     
-	if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0)
+	if(inet_pton(AF_INET, servidor, &serv_addr.sin_addr)<=0)
 	{
 		printf("\nDireccion invalida\n");
 		return -1;
@@ -63,7 +72,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    printf("Conexion establecida\n");
+    printf("Bienvenido al Hangman!\nSolo puedes cometer 6(seis) errores.\n\nComencemos!\n\n\n\n");
 
     read(se, bufferLectura, 1024);
     printf("%s\n", bufferLectura);
@@ -81,12 +90,23 @@ int main(int argc, char *argv[])
             if ((p = strchr(ingresado, '\n')) != NULL)
                 *p = '\0';
 
-        } while(strlen(lecturaTeclado) == 0);
+        } while(strlen(ingresado) == 0);
 
         write(se, ingresado, strlen(ingresado));
+        memset(bufferLectura, 0, sizeof bufferLectura);
+        read(se, bufferLectura, sizeof(bufferLectura));
 
-        read(se, bufferLectura, 1024);
+
+        if (strstr(bufferLectura, "/fin") > 0)
+        {
+            printf("El servidor finalizo.\n");
+            exit(0);
+        }
+
+        printf("**********Recibido************\n");
         printf("%s\n", bufferLectura);
+        printf("**********FIN Recibido************\n");
+
 
     }
 

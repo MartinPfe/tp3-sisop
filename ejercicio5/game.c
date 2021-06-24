@@ -115,16 +115,16 @@ void tryLetter(char* word, int len, char* guessed, char* falseWord, int* errores
 
 	guess = tolower(guess);
 
-		for (int i = 0; i < len; ++i)
-		{
-			if(word[i] == guess) {
-				found = true;
-				guessed[i] = guess;
-			}	
-		}
-		if(!found) {
-			falseWord[*errores] = guess;
-			*errores += 1;
-		}
+	for (int i = 0; i < len; ++i)
+	{
+		if(word[i] == guess) {
+			found = true;
+			guessed[i] = guess;
+		}	
+	}
+	if(!found) {
+		falseWord[*errores] = guess;
+		*errores += 1;
+	}
 }
 

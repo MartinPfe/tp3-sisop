@@ -30,7 +30,7 @@ char *dir_M_SERVER;
 void sigintHandler(int sig_num)
 {
     // printf("Le aviso al server y me voy\n");
-    strcpy(bufferSincro, "fin");
+    strcpy(bufferSincro, "/fin");
     escribirEnMemoriaCompartida(dir_M_SERVER);
     sem_post(semaforoCliente);
     printf("Gracias por jugar!\n");
@@ -73,6 +73,7 @@ int main(int argc, char *argv[])
     while (1)
     {
 		sem_wait(semaforoServer);
+        memset(bufferSincro, 0, sizeof bufferSincro);
         strcpy(bufferSincro, (char*)dir_M_SERVER);
 		printf("%s \n", bufferSincro);
 
