@@ -1,3 +1,21 @@
+//***********************
+// Nombre del Script:            ./game
+// Trabajo Practico Nro:         3
+// Ejercicio Nro:                4
+// Entrega Nro:                  1
+// Integrantes
+//
+//       Apellidos               Nombre                  Dni
+//-------------------------------------------------------------------
+//
+//       Della Maddalena         Tomas                   39322141
+//       Hidalgo                 Nahuel Christian        41427455
+//       Feito                   Gustavo                 27027190
+//       Pfeiffer                Martin                  39166668
+//       Zarzycki                Hernan Alejandro        39244031
+//
+//***********************
+
 #include "game.h"
 
 #include <stdio.h>

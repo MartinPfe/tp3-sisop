@@ -1,21 +1,24 @@
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <sys/socket.h>
-// #include <sys/types.h>
-// #include <netinet/in.h>
-// #include <string.h>
+//***********************
+// Nombre del Script:            ./servidor
+// Trabajo Practico Nro:         3
+// Ejercicio Nro:                5
+// Entrega Nro:                  1
+// Integrantes
+//
+//       Apellidos               Nombre                  Dni
+//-------------------------------------------------------------------
+//
+//       Della Maddalena         Tomas                   39322141
+//       Hidalgo                 Nahuel Christian        41427455
+//       Feito                   Gustavo                 27027190
+//       Pfeiffer                Martin                  39166668
+//       Zarzycki                Hernan Alejandro        39244031
+//
+//***********************
 
-#include <pthread.h>
+
 #include <signal.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <netdb.h>
 #include "game.h"
 

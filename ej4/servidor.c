@@ -1,18 +1,25 @@
-#include <pthread.h>
+//***********************
+// Nombre del Script:            ./servidor
+// Trabajo Practico Nro:         3
+// Ejercicio Nro:                4
+// Entrega Nro:                  1
+// Integrantes
+//
+//       Apellidos               Nombre                  Dni
+//-------------------------------------------------------------------
+//
+//       Della Maddalena         Tomas                   39322141
+//       Hidalgo                 Nahuel Christian        41427455
+//       Feito                   Gustavo                 27027190
+//       Pfeiffer                Martin                  39166668
+//       Zarzycki                Hernan Alejandro        39244031
+//
+//***********************
+
 #include <signal.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <sys/mman.h>
-#include <sys/stat.h> // Define constantes de modo
-#include <fcntl.h> // Define constantes O_*
+#include <fcntl.h>
 #include <semaphore.h>
 #include "game.h"
 
@@ -73,7 +80,7 @@ int main(int argc, char *argv[])
     }
 
 
-    //signal(SIGINT, sigintHandler);
+    signal(SIGINT, sigintHandler);
     signal(SIGUSR1, sigusr1Handler);
 
     borrarSemaforo("server", semaforoServer);
