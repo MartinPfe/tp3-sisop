@@ -60,7 +60,6 @@ int main(int argc, char *argv[])
 
 	dir_M_SERVER = (char *)abrirMemoriaCompartida("M_SERVER", sizeof(bufferSincro));
  	char* p;
-
    
     printf("Bienvenido al Hangman!\nSolo puedes cometer 6(seis) errores.\n\nComencemos!\n\n\n\n");
     sem_wait(semaforoServer);
@@ -75,7 +74,13 @@ int main(int argc, char *argv[])
 		sem_wait(semaforoServer);
         memset(bufferSincro, 0, sizeof bufferSincro);
         strcpy(bufferSincro, (char*)dir_M_SERVER);
+     
 		printf("%s \n", bufferSincro);
+        
+        if (strstr(bufferSincro, "El servidor a finalizado la conexion.") > 0)
+        {
+            exit(0);
+        }
 
         do {
             fflush(stdin);
@@ -84,7 +89,6 @@ int main(int argc, char *argv[])
             if ((p = strchr(lecturaTeclado, '\n')) != NULL)
                 *p = '\0';
 
-          
         } while(strlen(lecturaTeclado) == 0);
 
         strcpy(bufferSincro, lecturaTeclado);

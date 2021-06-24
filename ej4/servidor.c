@@ -25,7 +25,6 @@ void borrarMemoriaCompartida(const char *nombre, size_t size, void *direccion);
 void * abrirMemoriaCompartida(const char *nombre, size_t size);
 void escribirEnMemoriaCompartida(char * dir_M_SERVER);
 void iniciar_juego();
-void avisarClienteFin();
 
 sem_t *semaforoServer;
 sem_t *semaforoCliente;
@@ -90,12 +89,10 @@ int main(int argc, char *argv[])
 	//Si habia algo lo borro
 	if(dir_M_SERVER)
 	{
-        printf("Borramos la memoria compartida\n");
 		borrarMemoriaCompartida("M_SERVER", sizeof(int), dir_M_SERVER);
 		dir_M_SERVER = (char *)crearMemoriaCompartida("M_SERVER", sizeof(bufferSincro));
 	}
 
-    printf("Empezando a escuchar\n");
     while (senialFinRecibida == 0)
     {
         iniciar_juego(dir_M_SERVER);
@@ -107,14 +104,6 @@ int main(int argc, char *argv[])
     printf("Fin del juego. Adios!!\n");
 }
 
-void avisarClienteFin()
-{
-    strcpy(bufferSincro, "STOP");
-    printf("Avisandole al otro gil");
-    escribirEnMemoriaCompartida(dir_M_SERVER);
-    sem_post(semaforoServer);
-}
-
 void iniciar_juego(char * dir_M_SERVER)
 {
 	char *body = malloc(INTENTOS+1);
@@ -123,7 +112,6 @@ void iniciar_juego(char * dir_M_SERVER)
     char word[256];
     char *pword = getWord();
     strcpy(word, pword);
-    printf("La palabra a adivinar es: %s\n", word);
 
     // Variables del juego
     int errores = 0;
@@ -137,8 +125,6 @@ void iniciar_juego(char * dir_M_SERVER)
 	char* win;
     
     setvbuf(stdin, NULL, _IONBF, 0);
-
-    printf("Juego Inicializado\n");
 
     char buffLectura[1024];
     memset(buffLectura, '0', sizeof(buffLectura));
@@ -158,6 +144,9 @@ void iniciar_juego(char * dir_M_SERVER)
     int found = 0;
     int terminarPartida = 0;
 
+    printf("Juego Inicializado\n");
+    printf("La palabra a adivinar es: %s\n", word);
+
     snprintf(bufferSincro, sizeof(bufferSincro),"%s\n\n\tLetras usadas: %s\n\n\t %s",printBody(errores, body),errorsMessage, printWord(guessed, len));            
     escribirEnMemoriaCompartida(dir_M_SERVER);
     sem_post(semaforoServer);
@@ -167,69 +156,71 @@ void iniciar_juego(char * dir_M_SERVER)
 
         strcpy(bufferSincro, (char*)dir_M_SERVER);
 
-        printf("Mensaje recibido: %s\n", bufferSincro);    
+        printf("---------JUGANDO---------------\n");    
             
         //bufferSincro[3] = '\0';
             
         if (strstr(bufferSincro, "/fin") > 0)
         {
-            printf("ingresado FINNN");
             terminarPartida = 1;
             break;
         }
 
-        letra = bufferSincro[0];
-        found = 0;
+        if (terminarPartida == 0)
+        {
+            letra = bufferSincro[0];
+            found = 0;
 
-        if (strcmp(&letra, "") == 0)
-        {
-            printf("El cliente ingresó un vacio\n");
-            strcpy(bufferSincro, "Ingrese un caracter valido.");
-            escribirEnMemoriaCompartida(dir_M_SERVER);
-            sem_post(semaforoServer);
-            continue;
-        }
-    
-        if(!isalpha(letra))
-        {
-            printf("El cliente ingresó algo que no era caracter\n");
-            strcpy(bufferSincro, "Ingrese un caracter valido.");
-            escribirEnMemoriaCompartida(dir_M_SERVER);
-            sem_post(semaforoServer);
-            continue;
-        }
-        else {
-            letra = tolower(letra);
-            if(strchr(letrasUsadas, letra) != NULL)
+            if (strcmp(&letra, "") == 0)
             {
-                printf("El cliente ingresó una letra repetida\n");
-                strcpy(bufferSincro, "La letra que ingresaste esta repetida.");
+                printf("El cliente ingresó un vacio\n");
+                strcpy(bufferSincro, "Ingrese un caracter valido.");
                 escribirEnMemoriaCompartida(dir_M_SERVER);
                 sem_post(semaforoServer);
                 continue;
             }
+        
+            if(!isalpha(letra))
+            {
+                printf("El cliente ingresó algo que no era caracter\n");
+                strcpy(bufferSincro, "Ingrese un caracter valido.");
+                escribirEnMemoriaCompartida(dir_M_SERVER);
+                sem_post(semaforoServer);
+                continue;
+            }
+            else {
+                letra = tolower(letra);
+                if(strchr(letrasUsadas, letra) != NULL)
+                {
+                    printf("El cliente ingresó una letra repetida\n");
+                    strcpy(bufferSincro, "La letra que ingresaste esta repetida.");
+                    escribirEnMemoriaCompartida(dir_M_SERVER);
+                    sem_post(semaforoServer);
+                    continue;
+                }
+            }
+
+            tryLetter(word, len, guessed, falseWord, &errores, letra);
+
+            printf("Lo que tiene que adivinar es: %s\n", word);
+
+            strcpy(bufferSincro, (char*)dir_M_SERVER);
+
+            letrasUsadas[intentos] = letra;
+            intentos++;
+
+            printf("Letras usadas: %s\n", letrasUsadas);
+
+            snprintf(bufferSincro, sizeof(bufferSincro),"%s\n\n\tLetras usadas: %s\n\n\t %s\n\nIngrese la siguiente letra:\n",printBody(errores, body),letrasUsadas, printWord(guessed, len));            
+        
+            escribirEnMemoriaCompartida(dir_M_SERVER);
+
+            printf("Esperando que manden lo siguiente\n");    
+
+            win = strchr(guessed, '_');
+
+            seguirJugando = (errores < INTENTOS && win != NULL && terminarPartida == 0);
         }
-
-        tryLetter(word, len, guessed, falseWord, &errores, letra);
-
-        printf("Lo que tiene que adivinar es: %s\n", word);
-
-        strcpy(bufferSincro, (char*)dir_M_SERVER);
-
-        letrasUsadas[intentos] = letra;
-        intentos++;
-
-        printf("Letras usadas: %s\n", letrasUsadas);
-
-        snprintf(bufferSincro, sizeof(bufferSincro),"%s\n\n\tLetras usadas: %s\n\n\t %s\n\nIngrese la siguiente letra:\n",printBody(errores, body),letrasUsadas, printWord(guessed, len));            
-    
-        escribirEnMemoriaCompartida(dir_M_SERVER);
-
-        printf("Esperando que manden lo siguiente\n");    
-
-		win = strchr(guessed, '_');
-
-        seguirJugando = (errores < INTENTOS && win != NULL && terminarPartida == 0);
 
         if(seguirJugando)
         {
@@ -239,8 +230,6 @@ void iniciar_juego(char * dir_M_SERVER)
     }
     while(seguirJugando);
     isPlaying = 0;
-
-    printf("YA ME FUI\n");
 
     if (terminarPartida == 1)
     {
@@ -253,6 +242,13 @@ void iniciar_juego(char * dir_M_SERVER)
         } else {
             snprintf(bufferSincro, sizeof(bufferSincro), "\n%s\nHas Perdido!. La palabra era: %s\n\nIngresa alguna letra para jugar de nuevo o Ctrl + C para finalizar.\n", printBody(errores, body), word);
         }
+
+        if(senialFinRecibida==1)
+        {
+            strcat(bufferSincro, "\n\nEl servidor a finalizado la conexion.\n");
+        }
+
+
         escribirEnMemoriaCompartida(dir_M_SERVER);
     }
 
@@ -261,16 +257,26 @@ void iniciar_juego(char * dir_M_SERVER)
     free(letrasUsadas);
 
     sem_post(semaforoServer);
-    sem_wait(semaforoCliente);
-    if (terminarPartida == 0)
-    {
-        strcpy(bufferSincro, (char*)dir_M_SERVER);
 
-        if (strstr(bufferSincro, "/fin") > 0)
+    if (senialFinRecibida==1)
+    {
+        // strcpy(bufferSincro, "/fin");
+        // escribirEnMemoriaCompartida(dir_M_SERVER);
+    }
+    else {
+        if (terminarPartida == 0)
         {
-            sem_post(semaforoServer);
+            sem_wait(semaforoCliente);
+            strcpy(bufferSincro, (char*)dir_M_SERVER);
+
+            if (strstr(bufferSincro, "/fin") > 0)
+            {
+                sem_post(semaforoServer);
+            }
         }
     }
+
+
 
 	// return EXIT_SUCCESS;
     return;
