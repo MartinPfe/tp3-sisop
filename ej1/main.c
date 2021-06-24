@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     }
 
     getchar();
-    kill(parentID,SIGINT);
+    kill(-parentID,SIGINT);
 
     return 0;
 }
