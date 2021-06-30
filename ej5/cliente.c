@@ -22,6 +22,8 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include "game.h"
+#include <sys/file.h>
+#include <errno.h>
 
 struct sockaddr_in serv_addr;
 
@@ -59,6 +61,17 @@ int main(int argc, char *argv[])
     if(argc != 3){
         printf("El parametro utilizado no es correcto.\nEjecute el siguiente comando para mas informacion: ./cliente -help\n");
         exit(1);
+    }
+
+    //https://stackoverflow.com/questions/5339200/how-to-create-a-single-instance-application-in-c-or-c
+    int pid_file = open("/tmp/archivolockclientesocket.pid", O_CREAT | O_RDWR, 0666);
+    int rc = flock(pid_file, LOCK_EX | LOCK_NB);
+    if(rc) {
+        if(EWOULDBLOCK == errno)
+        {
+            printf("Solo se permite una instancia del cliente.\n");
+            exit(0);
+        }
     }
 
     signal(SIGINT, sigintHandler);

@@ -21,6 +21,9 @@
 #include <unistd.h>
 #include <netdb.h>
 #include "game.h"
+#include <sys/file.h>
+#include <errno.h>
+
 
 //declaraciones
 void iniciar_juego(int connfd);
@@ -68,6 +71,19 @@ int main(int argc, char *argv[])
                         "\n\nLa sintaxis para la ejecucion es: ./servidor [puerto int]\n\nEjemplo: ./servidor 8080\n\n");
         exit(1);
     }
+
+    //https://stackoverflow.com/questions/5339200/how-to-create-a-single-instance-application-in-c-or-c
+    int pid_file = open("/tmp/archivolockservidorsocket.pid", O_CREAT | O_RDWR, 0666);
+    int rc = flock(pid_file, LOCK_EX | LOCK_NB);
+    if(rc) {
+        if(EWOULDBLOCK == errno)
+        {
+            printf("Solo se permite una instancia del servidor.\n");
+            exit(0);
+        }
+    }
+
+
     signal(SIGINT, sigintHandler);
     signal(SIGUSR1, sigusr1Handler);
 

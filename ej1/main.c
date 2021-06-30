@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     }
     else if (nivelDesc == 1)
     {
-        printf("\nSoy el proceso con PID %d y pertenezco a la generación %d.\n", getpid(), 1);
+        printf("\nProceso %d.\n", getpid());
     }
 
     getchar();

@@ -22,6 +22,8 @@
 #include <fcntl.h>
 #include <semaphore.h>
 #include "game.h"
+#include <sys/file.h>
+#include <errno.h>
 
 sem_t *crearSemaforo(const char *nombre, int valor);
 void borrarSemaforo(const char * nombre, sem_t *semaforo);
@@ -32,6 +34,7 @@ void borrarMemoriaCompartida(const char *nombre, size_t size, void *direccion);
 void * abrirMemoriaCompartida(const char *nombre, size_t size);
 void escribirEnMemoriaCompartida(char * dir_M_SERVER);
 void iniciar_juego();
+void limpiar();
 
 sem_t *semaforoServer;
 sem_t *semaforoCliente;
@@ -58,6 +61,7 @@ void sigusr1Handler(int sig_num)
     else{
         printf("\n Gracias por jugar. \n");
         fflush(stdout);
+        limpiar();
         exit(0);
     }
 }
@@ -79,6 +83,16 @@ int main(int argc, char *argv[])
         }
     }
 
+    //https://stackoverflow.com/questions/5339200/how-to-create-a-single-instance-application-in-c-or-c
+    int pid_file = open("/tmp/archivolockservidorsemaforo.pid", O_CREAT | O_RDWR, 0666);
+    int rc = flock(pid_file, LOCK_EX | LOCK_NB);
+    if(rc) {
+        if(EWOULDBLOCK == errno)
+        {
+            printf("Solo se permite una instancia del servidor.\n");
+            exit(0);
+        }
+    }
 
     signal(SIGINT, sigintHandler);
     signal(SIGUSR1, sigusr1Handler);
@@ -105,10 +119,17 @@ int main(int argc, char *argv[])
         iniciar_juego(dir_M_SERVER);
     }
 
-    borrarSemaforo("server", semaforoServer);
-    borrarSemaforo("cliente", semaforoCliente);
+    limpiar();
 
     printf("Fin del juego. Adios!!\n");
+}
+
+
+void limpiar()
+{
+    borrarSemaforo("server", semaforoServer);
+    borrarSemaforo("cliente", semaforoCliente);
+    borrarMemoriaCompartida("M_SERVER", sizeof(int), dir_M_SERVER);
 }
 
 void iniciar_juego(char * dir_M_SERVER)
@@ -330,7 +351,7 @@ void escribirEnMemoriaCompartida(char * dir_M_SERVER)
 
 void borrarSemaforo(const char * nombre, sem_t *semaforo)
 {
-	sem_close(semaforo);
+    sem_close(semaforo);
 	sem_unlink(nombre);
 }
 
