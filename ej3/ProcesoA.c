@@ -1,34 +1,17 @@
-//***********************
-// Nombre del Script:            ./ProcesoA
-// Trabajo Practico Nro:         3
-// Ejercicio Nro:                3
-// Entrega Nro:                  1
-// Integrantes
-//
-//       Apellidos               Nombre                  Dni
-//-------------------------------------------------------------------
-//
-//       Della Maddalena         Tomas                   39322141
-//       Hidalgo                 Nahuel Christian        41427455
-//       Feito                   Gustavo                 27027190
-//       Pfeiffer                Martin                  39166668
-//       Zarzycki                Hernan Alejandro        39244031
-//
-//***********************
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <fcntl.h>
+#include <math.h>
+
 #include <unistd.h>
-#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <dirent.h>
 
 #define err(msg, arg){ fprintf(stderr, "%s, vea %s -h\n", msg, arg); exit(1);}
 
-#define help(arg) { fprintf(stdout, "Ejemplo de ejecucion:\n ./path-del-ejecutable path-del-fifo carpeta-de-facturacion/\nEjemplo: %s pipe/fifo facturacion/\n", arg); exit(1);}
-float facturacion(const char*, const char*);
+#define help(arg) { fprintf(stdout, "Ejemplo de ejecucion:\n ./path-del-ejecutable carpeta-de-facturacion/\nEjemplo: %s facturacion/\n", arg); exit(1);}
+
 float facturacion_mensual(const char*);
 float facturacion_anual_o_media(const char*, int);
 
@@ -38,12 +21,15 @@ void main(int argc, char*argv[]){
 		help(argv[0]);
 	}
 
-	if(argc < 3)
+	if(argc < 1)
 		err("Argumentos insuficientes", argv[0]);
+	
+	char * pipe_path = "/tmp/fifo";
+	mkfifo(pipe_path, 0666);
 	
 	char *instruccion = (char*)malloc(sizeof(char)*50);
 
-	int fd = open(argv[1], O_RDONLY);
+	int fd = open(pipe_path	, O_RDONLY);
 	read(fd, instruccion, sizeof(instruccion)*50);
 	close(fd);
 
@@ -55,38 +41,41 @@ void main(int argc, char*argv[]){
 	const char* anio = strtok(NULL, "-");
 	const char* mes = strtok(NULL, "-");
 
-	char*folder_path = (char*)malloc(sizeof(char)*(strlen(argv[2]) + strlen(anio) + strlen(mes)));
+	char*folder_path = (char*)malloc(sizeof(char)*(strlen(argv[1]) + strlen(anio) + strlen(mes)));
 
-	folder_path = argv[2];
+	folder_path = argv[1];
 	strcat(folder_path, anio);
 
 	float res;
+
 	if(opc - '0' == 1)
 		res = facturacion_mensual(strcat(folder_path, mes));
 	else
 		res = facturacion_anual_o_media(folder_path, opc - '0');
 
-	fd = open(argv[1], O_WRONLY);
+	fd = open(pipe_path, O_WRONLY);
 	write(fd, &res, sizeof(res));
 	close(fd);
+	
 	return;
 }
 
 float facturacion_mensual(const char* path_name){
-	
+
 	float total = 0, value;
 	FILE*arch = fopen(path_name, "rt");
 
 	if(!arch){
-		return 0;
+		return INFINITY;
 	}
 	
 	while(fscanf(arch, "%f\n", &value) != EOF){
 		total += value;
 	}
+	
 	return total;
 }
-
+	
 float facturacion_anual_o_media(const char* folder_path, int opc){
 
 	float total = 0;	
@@ -120,6 +109,6 @@ float facturacion_anual_o_media(const char* folder_path, int opc){
 		closedir(d);	
 	}
 	else
-		return 0;
+		return INFINITY;
 	return opc == 2? total:total/count;
 }

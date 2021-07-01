@@ -1,31 +1,14 @@
-//***********************
-// Nombre del Script:            ./ProcesoB
-// Trabajo Practico Nro:         3
-// Ejercicio Nro:                3
-// Entrega Nro:                  1
-// Integrantes
-//
-//       Apellidos               Nombre                  Dni
-//-------------------------------------------------------------------
-//
-//       Della Maddalena         Tomas                   39322141
-//       Hidalgo                 Nahuel Christian        41427455
-//       Feito                   Gustavo                 27027190
-//       Pfeiffer                Martin                  39166668
-//       Zarzycki                Hernan Alejandro        39244031
-//
-//***********************
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #define err(msg, arg){ fprintf(stderr, "%s, vea %s -h\n", msg, arg); exit(1);}
-#define help(arg){ fprintf(stderr, "Ejemplo de ejecucion:\n ./path-del-ejecutable path-del-fifo\nEjemplo: %s pipe/fifo\n", arg); exit(1);}
+#define help(arg){ fprintf(stderr, "Ejemplo de ejecucion:\n ./path-del-ejecutable \nEjemplo: %s \n", arg); exit(1);}
 
 int pedir_anio(), pedir_mes();
 void main(int argc, char*argv[]){
@@ -34,8 +17,11 @@ void main(int argc, char*argv[]){
 		help(argv[0]);
 	}
 
-	if(argc < 2)
+	if(argc < 1)
 		err("Argumentos insuficientes", argv[0]);
+
+	char * pipe_path = "/tmp/fifo";
+	mkfifo(pipe_path, 0666);
 
 	char*meses[] = { "enero", "febrero", "marzo", 
 				 "abril", "mayo", "junio", 
@@ -64,20 +50,24 @@ void main(int argc, char*argv[]){
 
 	}while(1);
 
-	int fd = open(argv[1], O_WRONLY);
+	int fd = open(pipe_path, O_WRONLY);
 	write(fd, instruccion, strlen(instruccion));
 	close(fd);
 		
 	float res;
-	fd = open(argv[1], O_RDONLY);
+	fd = open(pipe_path, O_RDONLY);
 	read(fd, &res, sizeof(res));
 	close(fd);
 
-	printf(res == -1.00 ?"No existe facturacion correspondiente": "Facturacion correspondiente");
-	printf(strlen(mes) != 0? " a %s del %d: ": " al %s%d:", mes,anio);
-	printf(res != -1.00?" %.2f\n":"\n", res);
-
-	
+	if(res == INFINITY)
+		printf("No existe facturacion correspondiente\n");
+	else{
+		printf("Facturacion correspondiente");
+		printf(strlen(mes) != 0? " a %s del %d: ": " al %s%d:", mes,anio);
+		printf(res != -1.00?" %.2f\n":"\n", res);
+	}
+	unlink(pipe_path);
+	rmdir(pipe_path);
     return;
 }
 
